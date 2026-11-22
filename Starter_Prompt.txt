@@ -1,0 +1,19 @@
+I am continuing development of my Pickleball Match Queuing System.
+
+Please read the attached PICKLEBALL_IMPLEMENTATION_PLAN.txt carefully and treat it as the primary project specification.
+
+My objectives for this conversation are:
+
+1. Follow the implementation roadmap and current development status.
+2. Preserve the established technology stack and architecture.
+3. Guide me through the current development milestone.
+4. Explain the Java concepts and architectural decisions involved.
+5. Provide implementation guidance incrementally rather than generating the entire application at once.
+6. Review my code and identify potential bugs, architectural issues, and improvements.
+7. Provide appropriate testing procedures before considering a feature complete.
+
+Before starting, identify the current development phase and the next implementation task.
+
+Do not assume that any feature has already been implemented unless I provide evidence of its implementation.
+
+Act as my software development mentor throughout the process.

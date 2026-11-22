@@ -1,0 +1,1112 @@
+
+============================================================
+PROJECT: PICKLEBALL MATCH QUEUING SYSTEM
+DOCUMENT: MASTER IMPLEMENTATION PLAN
+VERSION: 1.0
+STATUS: PLANNING / INITIAL DEVELOPMENT
+============================================================
+
+============================================================
+SECTION 1: PROJECT OVERVIEW
+============================================================
+
+PROJECT DESCRIPTION:
+
+Develop a web-based Pickleball Match Queuing System designed
+to manage open-play pickleball sessions.
+
+The system will allow an organizer to register players,
+configure courts, manage player queues, generate matches
+based on skill levels, record match results, and maintain
+individual player standings.
+
+The system will have two primary interfaces:
+
+1. ORGANIZER DASHBOARD
+   - Used by the event organizer.
+   - Allows management of players, courts, matches,
+     queues, scores, and standings.
+
+2. PUBLIC DISPLAY
+   - Designed for a TV or monitor.
+   - Displays current matches, court assignments,
+     waiting players, completed games, and standings.
+   - Read-only interface.
+   - Automatically updates when the organizer changes
+     information.
+
+PRIMARY OBJECTIVE:
+
+Build a functional and expandable application that can
+manage actual open-play pickleball sessions.
+
+DEVELOPMENT PRIORITY:
+
+1. Functional correctness.
+2. Fair and reliable matchmaking.
+3. Accurate player and match records.
+4. Maintainable software architecture.
+5. User interface and user experience.
+6. Future scalability and additional features.
+
+
+============================================================
+SECTION 2: DEVELOPMENT TECHNOLOGY STACK
+============================================================
+
+PRIMARY PROGRAMMING LANGUAGE:
+- Java 25 LTS.
+
+BACKEND:
+- Spring Boot.
+- Spring Web.
+- Spring Data JPA.
+- Hibernate.
+- Spring Validation.
+
+FRONTEND:
+- Thymeleaf.
+- HTML.
+- CSS.
+- JavaScript.
+
+DATABASE:
+- PostgreSQL.
+
+DATABASE MIGRATION:
+- Flyway.
+
+REAL-TIME DISPLAY UPDATES:
+- Server-Sent Events (SSE).
+
+BUILD AUTOMATION:
+- Maven.
+
+DEVELOPMENT ENVIRONMENT:
+- IntelliJ IDEA.
+
+VERSION CONTROL:
+- Git.
+- GitHub.
+
+ARCHITECTURE:
+- Layered Monolithic Architecture.
+
+DEPLOYMENT:
+- Initially hosted on the organizer's computer.
+- Other devices connect through the same local network.
+- Public display accessed through a web browser.
+
+IMPORTANT TECHNOLOGY RULES:
+
+1. Java must remain the primary programming language.
+2. Do not introduce React, Angular, or another frontend
+   framework unless there is a clear technical reason.
+3. Use Thymeleaf for server-rendered web pages.
+4. Use JavaScript only where browser-side interaction
+   is necessary.
+5. Use PostgreSQL as the primary database.
+6. Use SSE for public display updates.
+7. Avoid microservices during initial development.
+8. Keep the matchmaking algorithm independent of the
+   web interface.
+9. Do not introduce unnecessary technologies or
+   dependencies without explaining their purpose.
+
+
+============================================================
+SECTION 3: SYSTEM ARCHITECTURE
+============================================================
+
+Follow a layered architecture.
+
+1. CONTROLLER LAYER
+   - Receives HTTP requests.
+   - Validates incoming requests.
+   - Calls the appropriate service.
+   - Returns webpages or response data.
+
+2. SERVICE LAYER
+   - Contains application business logic.
+   - Handles player management.
+   - Handles session management.
+   - Handles court management.
+   - Handles matchmaking.
+   - Handles match results and standings.
+
+3. REPOSITORY LAYER
+   - Handles database access.
+   - Uses Spring Data JPA.
+
+4. ENTITY LAYER
+   - Represents database entities.
+   - Defines relationships between entities.
+
+5. DTO LAYER
+   - Transfers data between application layers
+     and the frontend.
+   - Avoid exposing database entities directly
+     through external interfaces.
+
+6. CONFIGURATION LAYER
+   - Contains application configuration.
+   - Handles security and other shared settings.
+
+ARCHITECTURAL RULES:
+
+- Controllers must not contain matchmaking algorithms.
+- Controllers must not directly execute complex database
+  operations.
+- Business logic belongs in service classes.
+- Database operations belong in repositories.
+- Matchmaking must be independently testable.
+- Use transactions for operations that must succeed
+  or fail as a complete unit.
+- Avoid tightly coupling the frontend and backend.
+
+
+============================================================
+SECTION 4: CORE SYSTEM REQUIREMENTS
+============================================================
+
+FEATURE 1: PLAYER MANAGEMENT
+
+The system must allow the organizer to:
+
+- Register players.
+- Edit player information.
+- Remove or deactivate players.
+- Assign skill ratings.
+- View registered players.
+- Enable or disable player participation.
+
+PLAYER ATTRIBUTES:
+
+- Player ID.
+- Player name.
+- Skill rating (1-10).
+- Active status.
+- Registration date.
+
+SKILL RATING SCALE:
+
+1 = Beginner.
+10 = Highly skilled.
+
+Skill ratings will initially be assigned manually.
+
+FEATURE 2: SESSION MANAGEMENT
+
+The system must support open-play sessions.
+
+The organizer must be able to:
+
+- Create a session.
+- Name a session.
+- Start and end a session.
+- Register participating players.
+- Track player attendance.
+- View the current session.
+- Preserve historical sessions.
+
+A player must be reusable across multiple sessions.
+
+FEATURE 3: COURT MANAGEMENT
+
+The organizer must be able to:
+
+- Configure the number of courts.
+- Assign names or numbers to courts.
+- Enable or disable courts.
+- View available courts.
+- View occupied courts.
+- Assign matches to available courts.
+
+A court must not have multiple simultaneous active
+matches.
+
+FEATURE 4: PLAYER QUEUE MANAGEMENT
+
+The system must:
+
+- Maintain a list of players waiting to play.
+- Track players currently playing.
+- Prevent players from being assigned to multiple
+  simultaneous matches.
+- Support adding and removing players from the queue.
+- Track player participation.
+- Support fair rotation between players.
+
+FEATURE 5: MATCHMAKING
+
+The system must:
+
+- Generate matches automatically.
+- Select four players per doubles match.
+- Balance teams based on skill ratings.
+- Randomize player pairings and opponents.
+- Avoid repeatedly assigning the same partners.
+- Avoid excessive opponent repetition.
+- Consider previous match participation.
+- Allow manual match modifications.
+- Allow the organizer to approve generated matches.
+
+MATCHMAKING PRIORITIES:
+
+1. Prevent duplicate player assignments.
+2. Distribute playing opportunities fairly.
+3. Balance combined team skill.
+4. Avoid repeating partners.
+5. Avoid excessive opponent repetition.
+6. Randomize equally suitable match configurations.
+
+The algorithm must prioritize fairness and competitive
+balance rather than unrestricted randomization.
+
+FEATURE 6: MATCH MANAGEMENT
+
+The system must:
+
+- Generate matches.
+- Assign matches to courts.
+- Display assigned players.
+- Track match status.
+- Allow matches to begin.
+- Allow matches to be completed.
+- Support manual match cancellation.
+- Preserve match history.
+
+Suggested match statuses:
+
+- PENDING.
+- CONFIRMED.
+- IN_PROGRESS.
+- COMPLETED.
+- CANCELLED.
+
+FEATURE 7: SCORE MANAGEMENT
+
+The organizer must be able to:
+
+- Enter the final score.
+- Identify the winning team.
+- Complete a match.
+- Correct incorrectly entered results through an
+  explicit correction process.
+
+Completed matches must update player standings.
+
+FEATURE 8: STANDINGS
+
+The system must track:
+
+- Total matches played.
+- Wins.
+- Losses.
+- Win percentage.
+
+Standings must be calculated using completed match
+results as the source of truth.
+
+Avoid storing independently maintained win/loss totals
+as the only source of truth.
+
+FEATURE 9: PUBLIC DISPLAY
+
+The public display must:
+
+- Show active matches.
+- Show court assignments.
+- Show player names.
+- Show waiting players.
+- Show recently completed matches.
+- Show player standings.
+- Automatically receive updates through SSE.
+
+The public display must be read-only.
+
+It must not expose organizer controls.
+
+
+============================================================
+SECTION 5: DATABASE DESIGN
+============================================================
+
+INITIAL CORE ENTITIES:
+
+1. PLAYER
+
+Purpose:
+Stores registered player information.
+
+Suggested attributes:
+- player_id (Primary Key).
+- player_name.
+- skill_rating.
+- is_active.
+- created_at.
+
+2. SESSION
+
+Purpose:
+Represents an open-play event.
+
+Suggested attributes:
+- session_id (Primary Key).
+- session_name.
+- session_date.
+- session_status.
+- created_at.
+- ended_at.
+
+3. SESSION_PLAYER
+
+Purpose:
+Associates players with open-play sessions.
+
+Suggested attributes:
+- session_player_id (Primary Key).
+- session_id (Foreign Key).
+- player_id (Foreign Key).
+- participation_status.
+- queue_position.
+- joined_at.
+
+4. COURT
+
+Purpose:
+Stores court information.
+
+Suggested attributes:
+- court_id (Primary Key).
+- court_name.
+- is_active.
+
+5. SESSION_COURT
+
+Purpose:
+Associates courts with specific sessions.
+
+Suggested attributes:
+- session_court_id (Primary Key).
+- session_id (Foreign Key).
+- court_id (Foreign Key).
+- availability_status.
+
+6. MATCH
+
+Purpose:
+Stores individual matches.
+
+Suggested attributes:
+- match_id (Primary Key).
+- session_id (Foreign Key).
+- court_id or session_court_id (Foreign Key).
+- match_status.
+- scheduled_at.
+- started_at.
+- completed_at.
+
+7. MATCH_PLAYER
+
+Purpose:
+Associates four players with a match.
+
+Suggested attributes:
+- match_id (Foreign Key).
+- player_id (Foreign Key).
+- team_number.
+
+8. MATCH_RESULT
+
+Purpose:
+Stores the final score.
+
+Suggested attributes:
+- match_id (Primary Key and Foreign Key).
+- team_1_score.
+- team_2_score.
+- winning_team.
+- completed_at.
+
+DATABASE DESIGN RULES:
+
+- Use appropriate primary and foreign keys.
+- Enforce valid skill ratings (1-10).
+- Prevent duplicate player assignments within a match.
+- Prevent duplicate active court assignments.
+- Define appropriate relationships.
+- Use database transactions for critical operations.
+- Use Flyway for database schema migrations.
+- Do not rely on frontend validation alone.
+- Consider database constraints for important
+  business rules.
+
+IMPORTANT:
+
+The initial database structure may be adjusted during
+implementation if a better design is identified.
+
+Any significant database changes must be documented
+and explained before implementation.
+
+
+============================================================
+SECTION 6: IMPLEMENTATION ROADMAP
+============================================================
+
+Follow the phases in sequence.
+
+Do not begin a later phase until the current phase
+has been implemented and tested sufficiently.
+
+------------------------------------------------------------
+PHASE 0: PROJECT PLANNING AND ENVIRONMENT SETUP
+------------------------------------------------------------
+
+OBJECTIVES:
+
+Prepare the development environment and establish
+the project structure.
+
+TASKS:
+
+- Install Java 25 LTS.
+- Install IntelliJ IDEA.
+- Install PostgreSQL.
+- Configure Git and GitHub.
+- Generate a Spring Boot Maven project.
+- Configure initial dependencies.
+- Establish the package structure.
+- Run the initial application.
+- Verify that the application starts successfully.
+
+EXPECTED DELIVERABLES:
+
+- Functional Spring Boot application.
+- Working Maven configuration.
+- Git repository.
+- Initial project structure.
+- Successful application startup.
+
+COMPLETION CRITERIA:
+
+The application starts without errors and can be
+accessed through a web browser.
+
+
+------------------------------------------------------------
+PHASE 1: PLAYER MANAGEMENT
+------------------------------------------------------------
+
+OBJECTIVES:
+
+Implement player registration and management.
+
+TASKS:
+
+- Create the Player entity.
+- Create the Player repository.
+- Implement PlayerService.
+- Implement PlayerController.
+- Create player registration webpage.
+- Create player listing webpage.
+- Implement player editing.
+- Implement player deactivation.
+- Implement skill rating validation.
+- Add basic error handling.
+
+EXPECTED DELIVERABLES:
+
+A working player management module.
+
+COMPLETION CRITERIA:
+
+- Players can be registered.
+- Players can be edited.
+- Players can be deactivated.
+- Skill ratings are restricted to 1-10.
+- Player information persists after restarting
+  the application.
+- Invalid player information is rejected.
+
+
+------------------------------------------------------------
+PHASE 2: DATABASE AND SESSION MANAGEMENT
+------------------------------------------------------------
+
+OBJECTIVES:
+
+Establish the database foundation and implement
+open-play session management.
+
+TASKS:
+
+- Configure PostgreSQL.
+- Configure Spring Data JPA.
+- Configure Flyway migrations.
+- Create Session entity.
+- Create SessionPlayer entity.
+- Implement session creation.
+- Implement session editing.
+- Implement session starting and ending.
+- Register players into sessions.
+- Track player attendance.
+- Preserve historical sessions.
+
+EXPECTED DELIVERABLES:
+
+A working session management module.
+
+COMPLETION CRITERIA:
+
+- Sessions can be created.
+- Players can join sessions.
+- Players can be removed from active sessions.
+- Historical sessions remain accessible.
+- Player records can be reused across sessions.
+
+
+------------------------------------------------------------
+PHASE 3: COURT MANAGEMENT
+------------------------------------------------------------
+
+OBJECTIVES:
+
+Implement court configuration and availability.
+
+TASKS:
+
+- Create Court entity.
+- Create SessionCourt entity.
+- Implement court registration.
+- Configure court availability.
+- Assign courts to sessions.
+- Display court status.
+- Prevent conflicting court assignments.
+
+EXPECTED DELIVERABLES:
+
+A working court management module.
+
+COMPLETION CRITERIA:
+
+- Multiple courts can be configured.
+- Courts can be enabled or disabled.
+- Courts can be assigned to sessions.
+- Occupied courts cannot receive another active match.
+
+
+------------------------------------------------------------
+PHASE 4: PLAYER QUEUE MANAGEMENT
+------------------------------------------------------------
+
+OBJECTIVES:
+
+Implement player rotation and waiting queues.
+
+TASKS:
+
+- Create queue management logic.
+- Track waiting players.
+- Track currently playing players.
+- Track participation history.
+- Implement player queue ordering.
+- Prevent duplicate player assignments.
+- Support manual queue modifications.
+- Establish fair participation rules.
+
+EXPECTED DELIVERABLES:
+
+A functional player queue.
+
+COMPLETION CRITERIA:
+
+- Players can join and leave the queue.
+- Players can be marked as currently playing.
+- Players cannot be assigned to overlapping matches.
+- Queue positions are maintained correctly.
+- Player participation is tracked accurately.
+
+
+------------------------------------------------------------
+PHASE 5: MATCHMAKING ENGINE
+------------------------------------------------------------
+
+OBJECTIVES:
+
+Develop the core matchmaking algorithm.
+
+This phase must prioritize correctness and fairness.
+
+TASKS:
+
+1. Establish matchmaking input requirements.
+2. Determine eligible players.
+3. Determine available courts.
+4. Select four players per match.
+5. Generate team combinations.
+6. Calculate combined team skill.
+7. Evaluate team balance.
+8. Introduce randomized pairing.
+9. Track previous partners.
+10. Track previous opponents.
+11. Consider participation frequency.
+12. Generate suitable matches.
+13. Support manual modifications.
+14. Allow organizer approval.
+15. Save confirmed matches.
+
+INITIAL MATCHMAKING RULES:
+
+- Each match contains exactly four players.
+- Each match contains two teams of two.
+- Teams should have reasonably balanced combined
+  skill ratings.
+- Players must not appear in multiple simultaneous
+  matches.
+- Pairings should be randomized when appropriate.
+- Repeated partners should be discouraged.
+- Participation should be distributed fairly.
+- The organizer must be able to override the result.
+
+EXPECTED DELIVERABLES:
+
+A working matchmaking engine.
+
+COMPLETION CRITERIA:
+
+- Match generation produces valid matches.
+- Team skill differences are minimized according
+  to the chosen balancing strategy.
+- Duplicate assignments are prevented.
+- Match generation respects available courts.
+- Pairing variety is maintained.
+- Manual overrides work.
+- Matchmaking tests pass.
+
+IMPORTANT:
+
+Develop and test the matchmaking algorithm independently
+before connecting it to the web interface.
+
+Do not use machine learning or AI for the initial
+matchmaking implementation.
+
+
+------------------------------------------------------------
+PHASE 6: MATCH AND SCORE MANAGEMENT
+------------------------------------------------------------
+
+OBJECTIVES:
+
+Implement complete match lifecycle management.
+
+TASKS:
+
+- Implement match generation persistence.
+- Assign matches to courts.
+- Confirm matches.
+- Start matches.
+- Record final scores.
+- Determine winning teams.
+- Complete matches.
+- Handle cancelled matches.
+- Support explicit result corrections.
+- Release players and courts after completion.
+
+EXPECTED DELIVERABLES:
+
+A complete match management module.
+
+COMPLETION CRITERIA:
+
+- Match statuses transition correctly.
+- Match assignments persist.
+- Scores are recorded correctly.
+- Completed matches update standings.
+- Players return to the appropriate queue state.
+- Courts become available after match completion.
+- Cancelled matches do not affect standings.
+
+
+------------------------------------------------------------
+PHASE 7: PLAYER STANDINGS
+------------------------------------------------------------
+
+OBJECTIVES:
+
+Implement player statistics and rankings.
+
+TASKS:
+
+- Calculate total matches played.
+- Calculate wins.
+- Calculate losses.
+- Calculate win percentage.
+- Display standings.
+- Implement ranking rules.
+- Support historical standings.
+
+INITIAL RANKING CRITERIA:
+
+1. Number of wins.
+2. Win percentage.
+3. Additional tie-breaking criteria to be decided.
+
+EXPECTED DELIVERABLES:
+
+A functional standings system.
+
+COMPLETION CRITERIA:
+
+- Standings reflect completed match results.
+- Corrected results update standings.
+- Cancelled matches do not affect standings.
+- Rankings are calculated consistently.
+
+
+------------------------------------------------------------
+PHASE 8: ORGANIZER DASHBOARD
+------------------------------------------------------------
+
+OBJECTIVES:
+
+Integrate the system modules into one organizer
+interface.
+
+TASKS:
+
+- Create main dashboard.
+- Add navigation.
+- Display active sessions.
+- Display player statistics.
+- Display court availability.
+- Display waiting queue.
+- Display active matches.
+- Display recent match results.
+- Add organizer controls.
+- Improve layout and usability.
+
+EXPECTED DELIVERABLES:
+
+A functional organizer dashboard.
+
+COMPLETION CRITERIA:
+
+The organizer can manage the complete open-play
+session from one interface.
+
+
+------------------------------------------------------------
+PHASE 9: PUBLIC DISPLAY AND REAL-TIME UPDATES
+------------------------------------------------------------
+
+OBJECTIVES:
+
+Create the TV display interface.
+
+TASKS:
+
+- Create a separate display webpage.
+- Display active matches.
+- Display court assignments.
+- Display player names.
+- Display waiting queue.
+- Display recently completed matches.
+- Display standings.
+- Implement Server-Sent Events.
+- Automatically refresh displayed information.
+- Ensure the display is read-only.
+- Optimize the layout for large screens.
+
+EXPECTED DELIVERABLES:
+
+A functional public display.
+
+COMPLETION CRITERIA:
+
+- TV can access the display through a browser.
+- Updates appear without manual refreshing.
+- Organizer changes are reflected on the display.
+- Public users cannot modify system information.
+
+
+------------------------------------------------------------
+PHASE 10: SECURITY, TESTING AND DEPLOYMENT
+------------------------------------------------------------
+
+OBJECTIVES:
+
+Prepare the application for actual open-play use.
+
+TASKS:
+
+- Implement organizer authentication.
+- Protect organizer endpoints.
+- Restrict public display permissions.
+- Validate incoming data.
+- Test matchmaking edge cases.
+- Test database transactions.
+- Test simultaneous requests.
+- Test multiple browser connections.
+- Test SSE reconnection behavior.
+- Handle application errors.
+- Configure backups.
+- Prepare local network deployment.
+- Document installation procedures.
+
+EXPECTED DELIVERABLES:
+
+A stable initial release.
+
+COMPLETION CRITERIA:
+
+- Organizer access is protected.
+- Public display is read-only.
+- Data remains consistent.
+- Matchmaking works reliably.
+- Application can be deployed on the organizer's
+  computer.
+- Other devices can access the application
+  through the local network.
+
+
+============================================================
+SECTION 7: TESTING REQUIREMENTS
+============================================================
+
+Testing must be performed throughout development.
+
+UNIT TESTING:
+
+Focus on individual business logic components.
+
+Examples:
+- Skill rating validation.
+- Team balancing.
+- Player selection.
+- Duplicate assignment prevention.
+- Standings calculations.
+- Match status transitions.
+
+INTEGRATION TESTING:
+
+Verify that different application components work
+together.
+
+Examples:
+- Player registration and database persistence.
+- Session creation and player registration.
+- Match generation and database persistence.
+- Score entry and standings updates.
+- Match completion and court availability.
+
+EDGE CASE TESTING:
+
+Consider the following situations:
+
+- Only three players are waiting.
+- Exactly four players are waiting.
+- More players are waiting than available courts.
+- Players have identical skill ratings.
+- Players have significantly different skill ratings.
+- All courts are occupied.
+- A player becomes unavailable.
+- A match is cancelled.
+- An incorrect score is submitted.
+- The same score is submitted twice.
+- Two organizers attempt conflicting operations.
+
+Matchmaking must never assign a player to two
+simultaneous matches.
+
+Testing should be expanded as new features are added.
+
+
+============================================================
+SECTION 8: FUTURE FEATURES
+============================================================
+
+These features are NOT part of the initial required
+implementation.
+
+Only consider them after the core system is stable.
+
+POSSIBLE FUTURE FEATURES:
+
+1. Player accounts.
+2. Player self-registration.
+3. Mobile-friendly player interface.
+4. Player attendance QR codes.
+5. Automatic skill rating adjustments.
+6. Advanced matchmaking algorithms.
+7. Player performance statistics.
+8. Session history and analytics.
+9. Multiple organizers.
+10. Cloud deployment.
+11. Multiple venue support.
+12. Player notifications.
+13. Tournament mode.
+14. Doubles partner preferences.
+15. Singles match support.
+16. Player-specific matchmaking preferences.
+
+New features must not compromise the existing
+matchmaking and queue management functionality.
+
+
+============================================================
+SECTION 9: DEVELOPMENT RULES FOR CHATGPT
+============================================================
+
+This project will be developed with assistance from
+ChatGPT across potentially multiple conversations.
+
+ChatGPT must follow these instructions:
+
+1. ACT AS A PROFESSIONAL SOFTWARE DEVELOPMENT MENTOR.
+
+   Provide technically accurate guidance.
+   Explain architectural decisions.
+   Identify potential problems before implementation.
+
+2. PRESERVE THE TECHNOLOGY STACK.
+
+   Do not casually recommend switching programming
+   languages, frameworks, or databases.
+
+3. FOLLOW THE IMPLEMENTATION ROADMAP.
+
+   Implement the project incrementally.
+   Do not skip important phases without justification.
+
+4. EXPLAIN BEFORE IMPLEMENTING.
+
+   Before introducing a major feature, explain:
+   - Its purpose.
+   - Its dependencies.
+   - Its architectural location.
+   - Its expected behavior.
+
+5. TEACH JAVA WHILE DEVELOPING.
+
+   The developer has:
+   - Intermediate C++ experience.
+   - Beginner Python experience.
+   - Is currently learning Java.
+
+   Explain unfamiliar Java concepts.
+   Relate relevant concepts to C++ when useful.
+
+6. DO NOT OVERENGINEER.
+
+   Prefer simple, maintainable solutions.
+   Avoid unnecessary frameworks and abstractions.
+
+7. MAINTAIN CODE CONSISTENCY.
+
+   Follow established naming conventions.
+   Preserve existing package structures.
+   Avoid duplicating existing functionality.
+
+8. VALIDATE CODE.
+
+   Check imports, dependencies, class relationships,
+   method signatures, and framework compatibility.
+
+9. EXPLAIN MODIFICATIONS.
+
+   When modifying existing code:
+   - Identify the affected files.
+   - Explain what changes.
+   - Explain why the changes are necessary.
+
+10. TEST EACH IMPLEMENTATION.
+
+    Provide appropriate test cases.
+    Explain expected results.
+    Do not assume code works without verification.
+
+11. DO NOT ASSUME EXISTING IMPLEMENTATION.
+
+    When continuing in a new conversation, ask for
+    relevant existing source files, project structure,
+    database schema, and current implementation status
+    whenever they are needed.
+
+12. PRESERVE PROJECT CONTEXT.
+
+    If a new conversation begins, use this document
+    as the primary project specification.
+
+    Do not assume that previous conversation history,
+    code, or implementation progress is automatically
+    available.
+
+13. DOCUMENT IMPORTANT DECISIONS.
+
+    If implementation requires changing the architecture,
+    database design, or requirements:
+    - Explain the reason.
+    - Document the decision.
+    - Identify affected components.
+    - Update the implementation plan when necessary.
+
+14. KEEP THE PLAN UPDATED.
+
+    Mark completed phases.
+    Record unresolved issues.
+    Record newly introduced requirements.
+    Keep future development tasks aligned with
+    the actual state of the project.
+
+
+============================================================
+SECTION 10: CURRENT DEVELOPMENT STATUS
+============================================================
+
+CURRENT PHASE:
+Phase 0 - Project Planning and Environment Setup.
+
+COMPLETED:
+
+- Project concept established.
+- Core requirements identified.
+- Java selected as the primary language.
+- Spring Boot selected as backend framework.
+- Thymeleaf selected as frontend framework.
+- PostgreSQL selected as database.
+- Maven selected as build tool.
+- SSE selected for public display updates.
+- Layered monolithic architecture selected.
+- Initial database entities identified.
+- Implementation roadmap established.
+
+NOT YET CONFIRMED:
+
+- Development environment installation.
+- Spring Boot project creation.
+- Database configuration.
+- Git repository setup.
+- Initial application startup.
+
+NEXT DEVELOPMENT TASK:
+
+Initialize the Spring Boot Maven project using
+Spring Initializr.
+
+Then:
+1. Open the project in IntelliJ IDEA.
+2. Verify the Java and Maven configuration.
+3. Run the application.
+4. Confirm successful startup.
+5. Establish the Git repository.
+
+Do not begin Phase 1 until Phase 0 has been
+completed successfully.
+
+
+============================================================
+END OF MASTER IMPLEMENTATION PLAN
+============================================================
